@@ -1,0 +1,24 @@
+{
+  "name": "s3-to-ddb-stack",
+  "version": "0.1.0",
+  "bin": {
+    "s3-to-ddb-stack": "bin/s3-to-ddb-stack.js"
+  },
+  "scripts": {
+    "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
+    "cdk": "cdk",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "1.73.0",
+    "aws-cdk": "1.73.0",
+    "jest": "^26.4.2"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-dynamodb": "^1.74.0",
+    "@aws-cdk/aws-lambda": "^1.74.0",
+    "@aws-cdk/aws-s3": "^1.74.0",
+    "@aws-cdk/aws-s3-notifications": "^1.74.0",
+    "@aws-cdk/core": "1.73.0"
+  }
+}

@@ -1,10 +1,10 @@
-const cdk = require('@aws-cdk/core')
+const cdk = require('@aws-cdk/core');
 const s3 = require('@aws-cdk/aws-s3')
 const s3n = require('@aws-cdk/aws-s3-notifications')
 const lambda = require('@aws-cdk/aws-lambda')
 const dynamodb = require('@aws-cdk/aws-dynamodb')
 
-class CdkStack extends cdk.Stack {
+class S3ToDdbStackStack extends cdk.Stack {
   /**
    *
    * @param {cdk.Construct} scope
@@ -23,7 +23,7 @@ class CdkStack extends cdk.Stack {
 
     // Define the CMS Files bucket
     const bucket = new s3.Bucket(this, 'TachyonCMSFiles', {
-      versioned: true,
+      versioned: true, // Versioning allows auditng that changes match those in Git.
       publicReadAccess: false,
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
@@ -48,7 +48,22 @@ class CdkStack extends cdk.Stack {
     // Add event to S3 bucket
     bucket.addEventNotification(s3.EventType.OBJECT_CREATED, notification)
 
+    // Output DynamoDB values
+    new cdk.CfnOutput(this, "CmsTableName", {
+        value: table.tableName
+    });
+    new cdk.CfnOutput(this, "CmsTableArn", {
+        value: table.tableArn
+    });
+    // Output S3 bucket values
+    new cdk.CfnOutput(this, "CmsBucketName", {
+        value: bucket.bucketName
+    });
+    new cdk.CfnOutput(this, "CmsBucketArn", {
+        value: bucket.bucketArn
+    });
   }
+
 }
 
-module.exports = { CdkStack }
+module.exports = { S3ToDdbStackStack }

@@ -7,21 +7,21 @@ const s3 = new AWS.S3();
 
 const parentElements = 2;
 
-exports.handler = async function (event) {
+exports.handler = async function(event) {
     let S3Object = parseS3Event(event);
     let key = S3Object[0].key
 
-    let params = { Bucket: BUCKET_NAME, Key: key }
-    s3.getObject(params, function (err, data) {
-        if (err) {
-            console.log(err, err.stack);
-        }// an error occurred
-        else {
-            let objectData = JSON.parse(data.Body.toString('utf-8'));
-            let keys = parseS3Key(key)
-            Object.assign(keys, objectData)
-            return saveToDynamoDB(keys);// successful response
-        }
+    let params = {Bucket: BUCKET_NAME, Key: key}
+    s3.getObject(params, function(err, data) {
+      if (err) {
+          console.log(err, err.stack);
+      }// an error occurred
+      else  {   
+        let objectData = JSON.parse(data.Body.toString('utf-8'));
+        let keys = parseS3Key(key)
+        Object.assign(keys, objectData)
+        return saveToDynamoDB(keys);// successful response
+      }
     });
 };
 
@@ -54,9 +54,9 @@ function parseS3Key(key) {
 
     let current = ''
 
-    while (!identified) {
+    while(! identified) {
         current = keysPath.shift()
-        if (current == 'entries') {
+        if(current == 'entries') {
             // We have an entries file
             identified = true
             pkArray.push(keysPath.shift())
@@ -72,8 +72,8 @@ function parseS3Key(key) {
             pkArray.push(current)
 
             // If there is only a single element left it must be the SK.
-            if (keysPath.length === 1) {
-                identified = true
+            if(keysPath.length === 1) {
+               identified = true
             }
         }
     }
@@ -87,9 +87,10 @@ function parseS3Key(key) {
         pk: pk,
         sk: sk
     }
+
 }
 
-function saveToDynamoDB(data) {
+function saveToDynamoDB (data)  {
     if (!data) {
         return Promise.resolve();
     }
@@ -107,9 +108,9 @@ function saveToDynamoDB(data) {
 };
 
 function parseS3Event(event) {
-    if (!event || !event.Records || !Array.isArray(event.Records)) {
-        return [];
-    }
-    let extractMessage = record => record.s3 && record.s3.object;
-    return event.Records.map(extractMessage).filter(object => object);
+	if (!event || !event.Records || !Array.isArray(event.Records)) {
+		return [];
+  }
+  let extractMessage = record => record.s3 && record.s3.object;
+	return event.Records.map(extractMessage).filter(object => object);
 };
