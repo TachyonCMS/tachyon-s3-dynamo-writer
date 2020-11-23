@@ -1,10 +1,10 @@
-const cdk = require('@aws-cdk/core')
+const cdk = require('@aws-cdk/core');
 const s3 = require('@aws-cdk/aws-s3')
 const s3n = require('@aws-cdk/aws-s3-notifications')
 const lambda = require('@aws-cdk/aws-lambda')
 const dynamodb = require('@aws-cdk/aws-dynamodb')
 
-class S3ToDdbStackStack extends cdk.Stack {
+class TachyonCmsDatastoreStack extends cdk.Stack {
   /**
    *
    * @param {cdk.Construct} scope
@@ -23,47 +23,47 @@ class S3ToDdbStackStack extends cdk.Stack {
 
     // Define the CMS Files bucket
     const bucket = new s3.Bucket(this, 'TachyonCMSFiles', {
-      versioned: true, // Versioning allows auditng that changes match those in Git.
+      versioned: true,
       publicReadAccess: false,
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
 
     // Defines an AWS Lambda resource
     const lambdaFunction = new lambda.Function(this, 'DynamoImportS3Handler', {
-      runtime: lambda.Runtime.NODEJS_12_X,    // execution environment
+      runtime: lambda.Runtime.NODEJS_12_X,    // execution environment, use a current one
       code: lambda.Code.fromAsset('lambda'),  // code loaded from "lambda" directory
-      handler: 'dynamoImportS3.handler',      // Filename and function
+      handler: 'tachyonCmsS3ToDdb.handler',      // Filename and function
       environment: { // Make the following os.env variables available to the Lambda
-        CMS_TABLE_NAME: table.tableName,
-        BUCKET_NAME: bucket.bucketName
-      }
+          CMS_TABLE_NAME: table.tableName,
+          BUCKET_NAME: bucket.bucketName
+        }
     });
 
     // Grant Lambda access to table and bucket
-    table.grantReadWriteData(lambdaFunction);
-    bucket.grantReadWrite(lambdaFunction);
+    table.grantReadWriteData(lambdaFunction)
+    bucket.grantReadWrite(lambdaFunction)
 
     // Create an S3 Notification referencing the Lambda
     const notification = new s3n.LambdaDestination(lambdaFunction)
+
     // Add event to S3 bucket
     bucket.addEventNotification(s3.EventType.OBJECT_CREATED, notification)
 
-    // Output DynamoDB values
-    new cdk.CfnOutput(this, "CmsTableName", {
-        value: table.tableName
+    new cdk.CfnOutput(this, "TableName", {
+      value: table.tableName
     });
-    new cdk.CfnOutput(this, "CmsTableArn", {
+    new cdk.CfnOutput(this, "TableArn", {
         value: table.tableArn
     });
     // Output S3 bucket values
-    new cdk.CfnOutput(this, "CmsBucketName", {
+    new cdk.CfnOutput(this, "BucketName", {
         value: bucket.bucketName
     });
-    new cdk.CfnOutput(this, "CmsBucketArn", {
+    new cdk.CfnOutput(this, "BucketArn", {
         value: bucket.bucketArn
     });
-  }
 
+  }
 }
 
-module.exports = { S3ToDdbStackStack }
+module.exports = { TachyonCmsDatastoreStack }
