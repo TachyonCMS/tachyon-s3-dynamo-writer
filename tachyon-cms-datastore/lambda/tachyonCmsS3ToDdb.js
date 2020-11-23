@@ -12,17 +12,18 @@ exports.handler = async function(event) {
     let key = S3Object[0].key
 
     let params = {Bucket: BUCKET_NAME, Key: key}
-    s3.getObject(params, function(err, data) {
-      if (err) {
-          console.log(err, err.stack);
-      }// an error occurred
-      else  {   
+
+    try {
+        const data = await s3
+          .getObject({ Bucket: BUCKET_NAME, Key: key })
+          .promise();
         let objectData = JSON.parse(data.Body.toString('utf-8'));
         let keys = parseS3Key(key)
         Object.assign(keys, objectData)
         return saveToDynamoDB(keys);// successful response
+      } catch (err) {
+         console.log(err, err.stack);
       }
-    });
 };
 
 function parseS3Key(key) {

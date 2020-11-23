@@ -40,8 +40,8 @@ cdk deploy
 ### Create Directory and change into it
 
 ```bash
-mkdir s3-to-ddb-stack
-cd s3-to-ddb-stack
+mkdir tachyon-cms-datastore
+cd tachyon-cms-datastore
 ```
 
 ### Initialize JavaScript CDK app
@@ -69,7 +69,7 @@ npm install --save \
 ## Edit the Stack definition
 
 ```bash
-lib/s3-to-ddb-stack-stack.js
+lib/tachyon-cms-datastore-stack.js
 ```
 
 Started with the CDK generated default:
@@ -147,7 +147,7 @@ const bucket = new s3.Bucket(this, 'TachyonCMSFiles', {
 const lambdaFunction = new lambda.Function(this, 'DynamoImportS3Handler', {
     runtime: lambda.Runtime.NODEJS_12_X,    // execution environment, use a current one
     code: lambda.Code.fromAsset('lambda'),  // code loaded from "lambda" directory
-    handler: 'dynamoImportS3.handler',      // Filename and function
+    handler: 'tachyonCmsS3ToDdb.handler',      // Filename and function
     environment: { // Make the following os.env variables available to the Lambda
         CMS_TABLE_NAME: table.tableName,
         BUCKET_NAME: bucket.bucketName
@@ -204,9 +204,11 @@ Create a new `/lambda` directory in the root.
 
 ```bash
 mkdir lambda
+cd lambda
+touch tachyonCmsS3ToDdb.js
 ```
 
-
+Then edit `tachyonCmsS3ToDdb.js` and paste in the following:
 
 ```javascript
 const AWS = require('aws-sdk');
@@ -326,59 +328,13 @@ function parseS3Event(event) {
 };
 ```
 
-## Deplot the app
+## Deploy the app
 
 ```bash
 cdk deploy
 This deployment will make potentially sensitive changes according to your current security approval level (--require-approval broadening).
 Please confirm you intend to make the following modifications:
-
-IAM Statement Changes
-┌───┬─────────────────────────────────────────────────────────────────┬────────┬─────────────────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────┬──────────────────────────────────────────────────────────────────┐
-│   │ Resource                                                        │ Effect │ Action                                                          │ Principal                                                       │ Condition                                                        │
-├───┼─────────────────────────────────────────────────────────────────┼────────┼─────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────┤
-│ + │ ${BucketNotificationsHandler050ergegea3dbrege4/Ro │ Allow  │ sts:AssumeRole                                                  │ Service:lambda.amazonaws.com                                    │                                                                  │
-│   │ le.Arn}                                                         │        │                                                                 │                                                                 │                                                                  │
-├───┼─────────────────────────────────────────────────────────────────┼────────┼─────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────┤
-│ + │ ${DynamoImportS3Handler.Arn}                                    │ Allow  │ lambda:InvokeFunction                                           │ Service:s3.amazonaws.com                                        │ "ArnLike": {                                                     │
-│   │                                                                 │        │                                                                 │                                                                 │   "AWS:SourceArn": "${TachyonCMSFiles.Arn}"                      │
-│   │                                                                 │        │                                                                 │                                                                 │ },                                                               │
-│   │                                                                 │        │                                                                 │                                                                 │ "StringEquals": {                                                │
-│   │                                                                 │        │                                                                 │                                                                 │   "AWS:SourceAccount": "${AWS::AccountId}"                       │
-│   │                                                                 │        │                                                                 │                                                                 │ }                                                                │
-├───┼─────────────────────────────────────────────────────────────────┼────────┼─────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────┤
-│ + │ ${DynamoImportS3Handler/ServiceRole.Arn}                        │ Allow  │ sts:AssumeRole                                                  │ Service:lambda.amazonaws.com                                    │                                                                  │
-├───┼─────────────────────────────────────────────────────────────────┼────────┼─────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────┤
-│ + │ ${TachyonCMS.Arn}                                               │ Allow  │ dynamodb:BatchGetItem                                           │ AWS:${DynamoImportS3Handler/ServiceRole}                        │                                                                  │
-│   │                                                                 │        │ dynamodb:BatchWriteItem                                         │                                                                 │                                                                  │
-│   │                                                                 │        │ dynamodb:DeleteItem                                             │                                                                 │                                                                  │
-│   │                                                                 │        │ dynamodb:GetItem                                                │                                                                 │                                                                  │
-│   │                                                                 │        │ dynamodb:GetRecords                                             │                                                                 │                                                                  │
-│   │                                                                 │        │ dynamodb:GetShardIterator                                       │                                                                 │                                                                  │
-│   │                                                                 │        │ dynamodb:PutItem                                                │                                                                 │                                                                  │
-│   │                                                                 │        │ dynamodb:Query                                                  │                                                                 │                                                                  │
-│   │                                                                 │        │ dynamodb:Scan                                                   │                                                                 │                                                                  │
-│   │                                                                 │        │ dynamodb:UpdateItem                                             │                                                                 │                                                                  │
-├───┼─────────────────────────────────────────────────────────────────┼────────┼─────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────┤
-│ + │ ${TachyonCMSFiles.Arn}                                          │ Allow  │ s3:Abort*                                                       │ AWS:${DynamoImportS3Handler/ServiceRole}                        │                                                                  │
-│   │ ${TachyonCMSFiles.Arn}/*                                        │        │ s3:DeleteObject*                                                │                                                                 │                                                                  │
-│   │                                                                 │        │ s3:GetBucket*                                                   │                                                                 │                                                                  │
-│   │                                                                 │        │ s3:GetObject*                                                   │                                                                 │                                                                  │
-│   │                                                                 │        │ s3:List*                                                        │                                                                 │                                                                  │
-│   │                                                                 │        │ s3:PutObject*                                                   │                                                                 │                                                                  │
-├───┼─────────────────────────────────────────────────────────────────┼────────┼─────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────┤
-│ + │ *                                                               │ Allow  │ s3:PutBucketNotification                                        │ AWS:${BucketNotificationsHandler050ergegea3dbrege │                                                                  │
-│   │                                                                 │        │                                                                 │ 4/Role}                                                         │                                                                  │
-└───┴─────────────────────────────────────────────────────────────────┴────────┴─────────────────────────────────────────────────────────────────┴─────────────────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────────────┘
-IAM Policy Changes
-┌───┬────────────────────────────────────────────────────────────────────┬────────────────────────────────────────────────────────────────────────────────┐
-│   │ Resource                                                           │ Managed Policy ARN                                                             │
-├───┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
-│ + │ ${BucketNotificationsHandler050ergegea3dbrege/Role} │ arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole │
-├───┼────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────┤
-│ + │ ${DynamoImportS3Handler/ServiceRole}                               │ arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole │
-└───┴────────────────────────────────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────────────┘
-(NOTE: There may be security-related changes not in this list. See https://github.com/aws/aws-cdk/issues/1299)
+...
 
 Do you wish to deploy these changes (y/n)? y
 ```
