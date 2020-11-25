@@ -1,4 +1,14 @@
 const AWS = require('aws-sdk');
+var https = require('https');
+var agent = new https.Agent({
+   maxSockets: 25
+});
+
+AWS.config.update({
+   httpOptions:{
+      agent: agent
+   }
+});
 const docClient = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = 'neutrino';
 
